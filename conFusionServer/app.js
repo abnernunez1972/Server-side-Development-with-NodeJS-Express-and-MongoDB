@@ -6,14 +6,13 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
 var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
 
 const mongoose = require('mongoose');
 
-const Dishes = require('./models/dishes');
+const Dishes = require('./models/dishes').default;
 
 const url = 'mongodb://localhost:27017/conFusion';
 const connect = mongoose.connect(url);
@@ -24,10 +23,6 @@ connect.then((db) => {
 
 var app = express();
 
-app.use('/dishes',dishRouter);
-app.use('/promotions',promoRouter);
-app.use('/leaders',leaderRouter);
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -36,10 +31,51 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+//  AGREGAOS MIIDLEWARE DE AUTENTICACION BASICA //
+function auth (req, res, next) {
+  console.log(req.headers);
+  var authHeader = req.headers.authorization;
+  console.log("aqui muestra el authheader crudo " + authHeader);
+  if (!authHeader) {
+      var err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic');
+      err.status = 401;
+      next(err);
+      return;
+  }
+
+  var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+  var user = auth[0];
+  var pass = auth[1];
+
+
+  console.log("aqui muestra el auth arrays " + auth);
+  
+  if (user == 'admin' && pass == 'password') {
+      next(); // authorized
+  } else {
+      var err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic');      
+      err.status = 401;
+      next(err);
+  }
+}
+
+///// VALIDA DE PRIMERO LA AUTH ///
+app.use(auth);
+//
+
+/// FIN  AGREGAOS MIIDLEWARE DE AUTENTICACION BASICA
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+
+app.use('/dishes',dishRouter);
+app.use('/promotions',promoRouter);
+app.use('/leaders',leaderRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
