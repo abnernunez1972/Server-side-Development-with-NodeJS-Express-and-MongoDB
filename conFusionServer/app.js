@@ -11,7 +11,8 @@ var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
-
+var passport = require('passport');
+var authenticate = require('./authenticate');
 const mongoose = require('mongoose');
 
 const Dishes = require('./models/dishes').default;
@@ -28,47 +29,9 @@ var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-
-/* //  AGREGAOS MIIDLEWARE DE AUTENTICACION BASICA //
-app.use(cookieParser());
-
-
-function auth (req, res, next) {
-  console.log(req.headers);
-  var authHeader = req.headers.authorization;
-  console.log("aqui muestra el authheader crudo " + authHeader);
-  if (!authHeader) {
-      var err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic');
-      err.status = 401;
-      next(err);
-      return;
-  }
-
-  var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-  var user = auth[0];
-  var pass = auth[1];
-
-
-  console.log("aqui muestra el auth arrays " + auth);
-  
-  if (user == 'admin' && pass == 'password') {
-      next(); // authorized
-  } else {
-      var err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic');      
-      err.status = 401;
-      next(err);
-  }
-}
-*/
-
-// VALIDACION DE AUTENTICACIOB CON COOKIES 
 
 app.use(session({
   name: 'session-id',
@@ -78,57 +41,27 @@ app.use(session({
   store: new FileStore()
 }));
 
-
+app.use(passport.initialize());
+app.use(passport.session());
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 
 function auth (req, res, next) {
-  console.log(req.session);
 
-  if (!req.session.user) {
-      var authHeader = req.headers.authorization;
-      if (!authHeader) {
-          var err = new Error('You are not authenticated!');
-          res.setHeader('WWW-Authenticate', 'Basic');                        
-          err.status = 401;
-          next(err);
-          return;
-      }
-      var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-      var user = auth[0];
-      var pass = auth[1];
-      if (user == 'admin' && pass == 'password') {
-          req.session.user = 'admin';
-          next(); // authorized
-      } else {
-          var err = new Error('You are not authenticated!');
-          res.setHeader('WWW-Authenticate', 'Basic');
-          err.status = 401;
-          next(err);
-      }
+  if (!req.user) {
+    var err = new Error('You are not authenticated!');
+    err.status = 403;
+    next(err);
   }
   else {
-      if (req.session.user === 'admin') {
-          console.log('req.session: ',req.session);
-          next();
-      }
-      else {
-          var err = new Error('You are not authenticated!');
-          err.status = 401;
-          next(err);
-      }
+        next();
   }
 }
-//
 
-///// VALIDA DE PRIMERO LA AUTH /// */
 app.use(auth);
-//
-
-/// FIN  AGREGAOS MIIDLEWARE DE AUTENTICACION BASICA
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 app.use('/dishes',dishRouter);
 app.use('/promotions',promoRouter);
