@@ -16,7 +16,7 @@ var passport = require('passport');
 var authenticate = require('./authenticate');
 const mongoose = require('mongoose');
 const Dishes = require('./models/dishes').default;
-
+var authenticate = require('./authenticate');
 
 const connect = mongoose.connect(url);
 
@@ -38,6 +38,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/', indexRouter);
+
+
 app.use('/users', usersRouter);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dishes',dishRouter);

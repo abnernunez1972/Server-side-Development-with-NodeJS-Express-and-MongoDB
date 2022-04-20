@@ -5,6 +5,16 @@ var User = require('../models/user');
 var passport = require('passport');
 var authenticate = require('../authenticate');
 router.use(bodyParser.json());
+var Verify    = require('../authenticate');
+
+/* GET users listing. */
+router.route('/')
+.get(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin, function(req, res, next) {
+  User.find({}, function (err, user) {
+      if (err) throw err;
+      res.json(user);
+  });
+});
 
 router.post('/login', passport.authenticate('local'), (req, res) => {
   var token = authenticate.getToken({_id: req.user._id});
