@@ -3,12 +3,14 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const Leaders = require('../models/leaders');
 const leadersrouter = express.Router();
+const cors = require('./cors');
 var authenticate = require('../authenticate');
 leadersrouter.use(bodyParser.json());
 
 
 leadersrouter.route('/')
-.get((req,res,next) => {
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get(cors.cors,(req,res,next) => {
     Leaders.find({})
     .then((lead) => {
         res.statusCode = 200;
@@ -17,7 +19,7 @@ leadersrouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
+.post(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
     Leaders.create(req.body)
     .then((leadt) => {
         console.log('promo Created ', leadt);
@@ -27,11 +29,11 @@ leadersrouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.put(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
+.put(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /Leaders');
 })
-.delete(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
+.delete(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
     Leaders.remove({})
     .then((leaddel) => {
         res.statusCode = 200;
@@ -42,7 +44,8 @@ leadersrouter.route('/')
 });
 
 leadersrouter.route('/:leadID')
-.get((req,res,next) => {
+.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
+.get(cors.cors, (req,res,next) => {
     Leaders.findById(req.params.leadID)
     .then((promo) => {
         res.statusCode = 200;
@@ -51,11 +54,11 @@ leadersrouter.route('/:leadID')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.post(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
+.post(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
     res.statusCode = 403;
     res.end('POST operation not supported on /Leaders/'+ req.params.leadID);
 })
-.put(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
+.put(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
     Leaders.findByIdAndUpdate(req.params.leadID, {
         $set: req.body
     }, { new: true })
@@ -66,7 +69,7 @@ leadersrouter.route('/:leadID')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.delete(authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
+.delete(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin,(req, res, next) => {
     Leaders.findByIdAndRemove(req.params.leadID)
     .then((promo) => {
         res.statusCode = 200;
