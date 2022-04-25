@@ -9,11 +9,12 @@ var usersRouter = require('./routes/users');
 var dishRouter = require('./routes/dishRouter');
 var promoRouter = require('./routes/promoRouter');
 var leaderRouter = require('./routes/leaderRouter');
+var favoritesRouter = require('./routes/favoritesRouter');
 const uploadRouter = require('./routes/uploadRouter');
+const cors = require('./routes/cors');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 var passport = require('passport');
-var authenticate = require('./authenticate');
 const mongoose = require('mongoose');
 const Dishes = require('./models/dishes').default;
 var authenticate = require('./authenticate');
@@ -25,7 +26,7 @@ connect.then((db) => {
 }, (err) => { console.log(err); });
 var express = require('express');
 
-
+// Run a Mongo instance: sudo mongod --dbpath ~/data/db
 var app = express();
 // Secure traffic only
 app.all('*', (req, res, next) => {
@@ -66,7 +67,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/dishes',dishRouter);
 app.use('/promotions',promoRouter);
 app.use('/leaders',leaderRouter);
+app.use('/favorites',favoritesRouter);
 app.use('/imageUpload',uploadRouter);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));

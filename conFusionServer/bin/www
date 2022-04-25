@@ -18,8 +18,6 @@ var fs = require('fs');
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 app.set('secPort',port+443);
-console.log('este es el port' + port);
-console.log('este es el secport' + port);
 /**
  * Create HTTP server.
  */
