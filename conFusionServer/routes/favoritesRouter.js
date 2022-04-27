@@ -15,8 +15,8 @@ FavoritesRouter.route('/')
 .get(cors.cors,authenticate.verifyOrdinaryUser, (req, res, next) => {
         
         Favorites.find({user : req.user._id})
-        .populate('dishes')
         .populate('user')
+        .populate('dishes')
         .then((favorites) => {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
@@ -41,20 +41,20 @@ FavoritesRouter.route('/')
     res.end('PUT operation not supported on /Favorites');
 })
 .delete(cors.corsWithOptions,authenticate.verifyOrdinaryUser, authenticate.verifyAdmin, (req, res, next) => {
-   Favorites.remove({})
+   Favorites.remove({user : req.user._id})
     .then((resp) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
         res.json(resp);
     }, (err) => next(err))
-    .catch((err) => next(err));    
+     .catch((err) => next(err));
+    
 });
 
 FavoritesRouter.route('/:favoritesId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.cors,authenticate.verifyOrdinaryUser, (req,res,next) => {
-    //console.log(req.user._id)
-    var dish2 = req.params.favoritesId
+     var dish2 = req.params.favoritesId
      Favorites.find({dishes : dish2 })
     .populate('user')
     .populate('dishes')
@@ -68,14 +68,15 @@ FavoritesRouter.route('/:favoritesId')
 
 .post(cors.corsWithOptions, authenticate.verifyOrdinaryUser,  (req, res, next) => {
              var dish2 = req.params.favoritesId
-             Favorites.find({dish : dish2 })
+             var user2 = req.user._id
+             Favorites.find({dishes : dish2, user : user2})
              .then((favorites) => {
-                if (favorites != null) {
+                if (favorites) {
                     req.body.user = req.user._id;
                     req.body.dishes = dish2; 
                     Favorites.create((req.body))
-                    .then((leadt) => {
-                        console.log('promo Created ', leadt);
+                     .then((leadt) => {
+                        console.log('FavoriteDish  Created ', leadt);
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'application/json');
                         res.json(leadt);
@@ -83,5 +84,22 @@ FavoritesRouter.route('/:favoritesId')
                     .catch((err) => next(err));
                 }
         })
+
     })     
+    .delete(cors.corsWithOptions,authenticate.verifyOrdinaryUser, (req, res, next) => {
+         var dish =req.params.favoritesId 
+        
+        Favorites.remove({dishes : dish})
+         .then((resp) => {
+             res.statusCode = 200;
+             res.setHeader('Content-Type', 'application/json');
+             res.json(resp);
+         }, (err) => next(err))
+         .catch((err) => next(err));
+        
+           
+            
+     });
+     
+     
 module.exports =FavoritesRouter;
